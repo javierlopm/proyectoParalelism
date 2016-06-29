@@ -1,3 +1,4 @@
+\newpage
 # Introducción
 
 Para este proyecto seleccionamos uno de los 3 problemas del *Super Computing and Distributed Systems Camp Programming Contest* del año 2012, en este campamentos se suele evaluar el desempeño de los programas paralelos de los concursantes mediante la fórmula de aceleración que presentado en clases $(A=\dfrac{Tiempo Secuencial}{Tiempo Paralelo})$ es por esto que como primer paso implementamos un programa secuencial que resolviera el problema planteado.
@@ -5,7 +6,7 @@ Para este proyecto seleccionamos uno de los 3 problemas del *Super Computing and
 
 # Planteamiento del problema
 
-Se presenta un campo de batalla de tamaño NxN en el cual se encuentran objetivos militares y civiles los culaes poseen un valor que indica su resistencia, adicionalmente existe una serie de bombas las cuales actúan sobre áreas cuadradas con cierta potencia atacando a los diferentes objetivos. El problema a resolver es el cálculo de la cantidad de objetivos militares que han sido destruidos, afectados parcialmente y destruidos, de igual forma con los objetivos civiles.
+Se presenta un campo de batalla de tamaño NxN en el cual se encuentran objetivos militares y civiles los cuales poseen un valor que indica su resistencia, adicionalmente existe una serie de bombas las cuales actúan sobre áreas cuadradas con cierta potencia atacando a los diferentes objetivos. El problema a resolver es el cálculo de la cantidad de objetivos militares que han sido destruidos, afectados parcialmente y destruidos, de igual forma con los objetivos civiles.
 
 Los datos del programa serán recibidos por entrada estándar.
 
@@ -24,13 +25,13 @@ El flujo para la resolución del problema puede ser divido de forma secuencial e
 * Procesar entrada
 * Realizar conversión de formato de bomba
 * Por cada *objetivo*
-    - Verificar el tipo de objetivo (militar/civil)
-    - Marcar como no atacado
-    - Por cada bomba
-        + Si el objetivo está en el área
+    * Verificar el tipo de objetivo (militar/civil)
+    * Marcar como no atacado
+    * Por cada bomba
+        * Si el objetivo está en el área
             * Marcar como atacado
             * Actualizar su *resistencia*
-    - Actualizar los contadores de targets afectados, destruidos o atacados según sea el caso
+    * Actualizar los contadores de targets afectados, destruidos o atacados según sea el caso
 
 Este algoritmo fue implementado en el archivo *secuencial.c*.
 
@@ -38,8 +39,17 @@ Este algoritmo fue implementado en el archivo *secuencial.c*.
 
 ### Repartición del trabajo
 
-Primero, analizamos las diferentes formas de dividir el problemas y optamos por un particionamientos de datos (descomposición de dominios), ya que el algoritmo 
+Primero, analizamos las diferentes formas de dividir el problemas y optamos por un particionamientos de datos (descomposición de dominios), primero observarmos que el cálculo del estado de cada *target* es completamente independiente de los otros por lo cual presenta un buen escenario para la paralelización. Además la cantidad de targets se puede repartir de forma relativamente homogénea dividiendo la cantidad de casos entre la cantidad de procesos.
 
+Para nuestra implementación decidimos utilizar MPI_Scatter para enviar a todos los nodos la cantidad de *targets que deben procesar* (world_size / n_targets) mientras que el nodo raiz procesara su segmento y el excedente (world_size % n_targets).
+
+### Cálculo paralelo de cada trabajo
+
+Cada proceso realizará el cálculo de objetivos destruidos, parcialmente destruidos y no atacados de forma secuencial sobre su conjuntos de datos el cual irá acumulado en un vector de resultado. 
+
+### Totalización del cálculo
+
+Luego de que cada nodo terminó de realizar su procesamiento, mediante el uso del procedimiento MPI_Gather, se acumularán todos los vectores resultantes en el nodo maestro, el cual procederá a reducir todas las respuestas a un solo arreglo de tamaño 6 (3 para civiles, y 3 para militares) mediante la sumatoria de las posiciones afines.
 
 # Análisis de otros problemas
 
@@ -95,24 +105,41 @@ procesos y finalmente devolverá el número de unos que existan en el arreglo.
 
 ### Planteamiento del problema
 
-turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+Para este problema se tiene una secuencia de "medios números" los cuales deben ser concatenados para probar posteriormente si son primos o no. 
+
+Además, potencialmente hay números mal escritos (empezando en 0), lo cual debe ser tomado en cuenta si se desea ahorrar tiempo de computo.
+
+Es importante notar que el cálculo de cada número concatenado es independiente de los demás.
+
+
+Por último se debe notar que es requerido ordenar los resultados.
 
 ### Solución propuesta
 
-turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+Esto se puede realizar de forma secuencial en un ciclo en el cual cada string es concatenados con todos los demás y luego se procede a intentar convertir este nuevo string en a un número (teniendo cuidado de la longitud y la variable de almacenamiento), posteriormente se debe proceder a realizar la verificación normal de si un número es primo o no, verificando primero si es par o no, en caso de que no lo sea proceder a realizar las verificación de n % i para los números impares entre 3 y $\sqrt{n}$.
+
+La cantidad de números a probar viene dado por N $\times$ (N-1), en el cual cada string es concatenado con todos los demás a probar.
+
+Como no es sencillos ordenar a priori todos los medios números, solo por su longitud y además es algo costoso ordenar elementos que puedes no necesitar, se puede ejecutar un algoritmo de ordenamiento sobre el arreglo de resultados. En el caso secuencial se puede utilizar quicksort por cuestiones de eficiencia.
 
 #### Paralelización
 
-turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+Los cálculos pertinentes para cada número formado, como ya se dijo son disjuntos, esta independencia de datos permite que, teniendo todos los strings en cada nodo, se pueda realizar una división equitativa del trabajo, tomando como trabajo principal para cada nodo n strings como lados izquierdos de medios números, y los restantes como lados derechos.
+
+Con respecto al orden que debe llevar el resultado final, se pueden tomar diferentes aproximaciones. En presencia de cantidades lo suficientemente pequeñas de números primos resultantes, se podría realizar un quicksort en el nodo maestro sin muchos problemas, pero para n lo suficientemente grandes, sería buena idea utilizar algoritmos que no trabajen con movimiento de arreglos en sitio, sino con algunos similares a mergesort.
 
 #### Repartición del trabajo
 
-turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+Para este problema, se puede realizar un MPI_Broadcast para que todos los nodos reciban el arreglo completo de strings, adicionalmente se puede enviar el rango de strings que deben probar como lados izquierdos (arreglo de dos enteros indicando linea inicial y final).
+
+Por ejemplo un nodo que le toque el primer string deberá revisar todas las concatenaciones entre este y los demás strings, por otra parte las permutaciones de estos casos las realizarán los otros nodos de forma independiente tomando sus respectivos strings como lados izquierdo, el primer string como lado derecho.
 
 #### Cálculo paralelo para cada proceso
 
-turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+Cada proceso debe realizar los mismos cálculos del caso sencuencial: verificar que el número esta bien escrito, concatenar el strings que encuentra procesando con todos los demás y verificar eficientemente si es primo o no.
+
+Posteriormente cada nodo deberá indicar la cantidad de números primos que econtró y el arreglo con los mismos.
 
 #### Totalización del cálculo
 
-turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+La totalización de calculos debe ser mediante envíos individuales hacia en nodo raíz, el cual itera esperando mensajes de cada nodo, primero uno indicando la cantidad de elementos que va a recibir y luego el arreglo. Posteriormente, en el caso sencillo el nodo raíz ordena los resultados recibidos.

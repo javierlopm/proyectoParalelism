@@ -1,10 +1,11 @@
-#include "stdio.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <mpi.h>
+#include <sys/time.h>
 
 #define NUM_TARGETS 4
 #define NUM_BOMBS   5
-#define AREA_SIZE   100 // Meh
+#define AREA_SIZE   100 
 
 #define DEAD_MIL    0
 #define BROKEN_MIL  1
@@ -62,8 +63,10 @@ int isInBombingArea(int area[],int target[]){
 */
 int * process(int **targets, int **attacks)
 {
+
     int i, j,touched = 1,isCivil,alive;
     static int res[6];
+
 
     for (i = 0; i < NUM_TARGETS; ++i) {
         touched = 0;
@@ -110,7 +113,6 @@ int main(int argc, char const *argv[])
     int world_size;
     int *res_arr;
     int res_aux[6];
-
 
 
     
