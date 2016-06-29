@@ -32,7 +32,7 @@ en reversa
 
 ### Solución propuesta
 
-### Paralelización
+#### Paralelización
 
 Para alcanzar la solución deseada aprovechando el paralelismo ofrecido por un conjunto de máquinas
 se decidió como mejor manera paralelizar el cálculo sobre las filas y columnas de la matriz, de
@@ -40,7 +40,7 @@ manera que cada proceso calcule sobre una parte de la matriz que no comparta con
 Cada proceso recibirá también la lista completa de palabras para ser buscadas entre las filas y columnas
 que haya recibido.
 
-### Repartición del trabajo
+#### Repartición del trabajo
 
 Para alcanzar el objetivo se propone repartir tanto las filas como las columnas de la matriz entre
 los diferentes procesos en ejecución. Se programará un proceso maestro en de manera que reparta las
@@ -48,7 +48,7 @@ filas y columnas de la matriz haciendo uso de la primitiva MPI_scatter de la for
 posible. Luego este mismo proceso enviará mediante un MPI_Broadcast la lista de palabras para que
 todos los procesos la reciban completa.
 
-### Cálculo paralelo para cada proceso
+#### Cálculo paralelo para cada proceso
 
 Una vez recibida la lista de filas y columnas y la lista de palabras el proceso generará un arreglo de bits
 de tamaño W, este arreglo de bits representará el conjunto de palabras donde 1 significa que la palara fue
@@ -61,7 +61,7 @@ lo mencionado anteriormente, para esta palabra se colocará un 1 en el arreglo d
 al número de la palabra. Una vez iterada cada lista de palabras en cada lista de filas o columnas el proceso tendrá
 el cálculo parcial en el arreglo de bits mencionado al principio de este párrafo.
 
-### Totalización del cálculo
+#### Totalización del cálculo
 
 Cada proceso al finalizar el cálculo retornará el arreglo de bits haciendo uso de la primitiva MPI_Gather al
 proceso maestro. El proceso maestro realizará un AND bit a bit entre todos los arreglos retornados por los
