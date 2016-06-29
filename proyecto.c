@@ -15,6 +15,7 @@
 
 #define TARGET_SIZE 3
 
+//  Basic test case
 int targets[NUM_TARGETS][3] = {
     {0,0,8},
     {5,5,100},
@@ -30,6 +31,10 @@ int bombs[NUM_BOMBS][4] = {
     {9,9,8,1}
 };
 
+/* 
+	radToArea transforma el formato de los bombardeos a 
+	otro más eficiente de manejar
+*/
 int* radToArea(int bomb[]){
     int * res = (int *) malloc( sizeof(int) * 5 );
 
@@ -42,11 +47,19 @@ int* radToArea(int bomb[]){
     return res;
 }
 
+/*
+	isInBombingArea dado un target y un área bombardeada
+	verifica que el target haya sido afectado por la bomba
+*/
 int isInBombingArea(int area[],int target[]){
     return (area[0] <= target[0]  && target[0] <= area[2]) && 
            (area[1] <= target[1]  && target[1] <= area[3]);
 }
 
+/*
+	process función que dada una lista de targets y una lista de attacks
+	calcula los daños ocasionados por el bombardeo en dicha lista de objetivos
+*/
 int * process(int **targets, int **attacks)
 {
     int i, j,touched = 1,isCivil,alive;
@@ -170,8 +183,8 @@ int main(int argc, char const *argv[])
         free(b_areas[i]);
 
     MPI_Type_free(&target_type);
+
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
-
-
     return 0;
 }
