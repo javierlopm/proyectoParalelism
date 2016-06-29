@@ -67,4 +67,11 @@ Cada proceso al finalizar el cálculo retornará el arreglo de bits haciendo uso
 proceso maestro. El proceso maestro realizará un AND bit a bit entre todos los arreglos retornados por los
 procesos y finalmente devolverá el número de unos que existan en el arreglo.
 
-	
+## Weird puzzle
+
+### Planteamiento del problema
+
+### Solución propuesta
+
+#### Paralelización
+
