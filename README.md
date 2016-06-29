@@ -24,8 +24,8 @@ Párrafo más divertido
 
 ### Planteamiento del problema
 
-Este problema consiste en una matriz cuadrada de tamaño N compuesta de caracteres y un conjunto
-de palabras que pueden estar o no en la matriz. La idea es calcular cuántas de estas palaras se
+El problema **Weird puzzle** consiste en una matriz de tamaño **N** compuesta de caracteres y una lista
+de **W** palabras que pueden estar o no en la matriz. La idea es calcular cuántas de estas palaras se
 encuentran en esta matriz, tomando en cuenta que las letras de la palabra no tienen que estar
 necesariamente contiguas, pueden comenzar al final y seguir al princpio así como también estar
 en reversa
