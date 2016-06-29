@@ -67,11 +67,29 @@ Cada proceso al finalizar el cálculo retornará el arreglo de bits haciendo uso
 proceso maestro. El proceso maestro realizará un AND bit a bit entre todos los arreglos retornados por los
 procesos y finalmente devolverá el número de unos que existan en el arreglo.
 
-## Weird puzzle
+## Yet more primes
 
 ### Planteamiento del problema
 
+turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+
 ### Solución propuesta
 
+turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+
 #### Paralelización
+
+turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+
+#### Repartición del trabajo
+
+turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+
+#### Cálculo paralelo para cada proceso
+
+turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
+
+#### Totalización del cálculo
+
+turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles lots of turtles
 
