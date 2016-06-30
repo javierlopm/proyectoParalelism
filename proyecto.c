@@ -152,6 +152,19 @@ int main(int argc, char const *argv[])
 
     //int parallel_targets[num_elements_per_proc][TARGET_SIZE];
     int *parallel_targets = (int *)malloc(num_elements_per_proc*sizeof(int *)*3);
+    /*int **parallel_targets = (int **)malloc(num_elements_per_proc*sizeof(int));
+    for (i = 0; i < num_elements_per_proc; ++i)
+    {
+        parallel_targets[i] = (int *) malloc(sizeof(int)*3);
+    }*/
+
+
+
+    /* n_elements_per_proc arrays of 4 ints*/
+
+    /* Number of bombs arrays of size 5 (after conversion) */
+    // int **bombs            = (int **) calloc(num_bombs,sizeof(int)* 5);
+    // HACER E BROADCAST
 
     for (i = 0; i < 6; ++i)
         res_aux[i] = 0;
