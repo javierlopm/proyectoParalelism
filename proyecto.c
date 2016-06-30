@@ -14,38 +14,36 @@
 #define BROKEN_CIV  4
 #define UNTOUCH_CIV 5
 
-#define TARGET_SIZE 3
+#define TARGET_SIZE   3
+#define RAW_BOMB_SIZE 4
+#define BOMB_SIZE     5
 
 //  Basic test case
-int targets[NUM_TARGETS][3] = {
-    {0,0,8},
-    {5,5,100},
-    {1,1,-2},
-    {7,7,-6}
+int targets[12] = {
+    0,0,  8,
+    5,5,100,
+    1,1, -2,
+    7,7, -6
 };
 
-int bombs[NUM_BOMBS][4] = {
-    {2,1,2,3},
-    {1,1,1,4},
-    {7,7,0,3},
-    {6,6,4,8},
-    {9,9,8,1}
+int bombs[20] = {
+    2,1,2,3,
+    1,1,1,4,
+    7,7,0,3,
+    6,6,4,8,
+    9,9,8,1
 };
 
 /* 
 	radToArea transforma el formato de los bombardeos a 
 	otro más eficiente de manejar
 */
-int* radToArea(int bomb[]){
-    int * res = (int *) malloc( sizeof(int) * 5 );
-
+void radToArea(int bomb[],int res[]){
     res[0] = bomb[0]-bomb[2];
     res[1] = bomb[2]-bomb[2];
     res[2] = bomb[0]+bomb[2];
     res[3] = bomb[2]+bomb[2];
     res[4] = bomb[3];
-
-    return res;
 }
 
 /*
@@ -67,7 +65,6 @@ int * process(int **targets, int **attacks, int num_elements_per_proc)
 
     int i, j,touched = 1,isCivil,alive;
     static int res[6];
-
 
     for (i = 0; i < num_elements_per_proc; ++i) {
         touched = 0;
@@ -108,7 +105,7 @@ int * process(int **targets, int **attacks, int num_elements_per_proc)
 int main(int argc, char const *argv[])
 {
     int i,j;
-    int *b_areas[NUM_BOMBS];
+    int *b_areas;
     int *res;
     int world_rank;
     int world_size;
@@ -128,18 +125,20 @@ int main(int argc, char const *argv[])
     printf("size of target type %zu\n", sizeof(target_type));
     printf("size of target int  %zu\n", sizeof(int));
 
+    b_areas = calloc(NUM_BOMBS*5,sizeof(int));
+
     if (world_rank == 0)
     {
         // Read
 
         // Bomb square areas to limit coordinates
         for (i = 0; i < NUM_BOMBS; ++i)
-            b_areas[i] = radToArea(bombs[i]);
+            radToArea(&bombs[i*RAW_BOMB_SIZE],&b_areas[i*BOMB_SIZE]);
 
         // printing new bomb areas
         for (i = 0; i < NUM_BOMBS; ++i)
             for (j = 0; j < 5; ++j) {
-                printf("%3d", b_areas[i][j]);
+                printf("%3d", b_areas[i*BOMB_SIZE + j]);
                 if (j == 4) printf("\n");
             }
 
@@ -160,7 +159,16 @@ int main(int argc, char const *argv[])
 
 
     /* n_elements_per_proc arrays of 4 ints*/
-    int **parallel_targets = (int **) calloc(num_elements_per_proc,sizeof(int)* 4);
+    int **parallel_targets = (int **) calloc(num_elements_per_proc,sizeof(int*));
+
+    for (i = 0; i < num_elements_per_proc; ++i)
+        parallel_targets[i] = (int *) calloc(3,sizeof(int));
+
+    printf("Aqui\n");
+    if (world_rank == 0){
+        for (i = 0; i < num_elements_per_proc; ++i)
+            printf("%p\n",parallel_targets[i]);
+    }
 
     /* Number of bombs arrays of size 5 (after conversion) */
     // int **bombs            = (int **) calloc(num_bombs,sizeof(int)* 5);
