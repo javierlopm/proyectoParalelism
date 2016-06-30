@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <mpi.h>
 #include <sys/time.h>
+#include <math.h>
 
 #define NUM_TARGETS 4
 #define NUM_BOMBS   5
@@ -13,20 +14,20 @@
 #define DEAD_CIV    3
 #define BROKEN_CIV  4
 #define UNTOUCH_CIV 5
-
 #define TARGET_SIZE   3
 #define RAW_BOMB_SIZE 4
 #define BOMB_SIZE     5
 
 //  Basic test case
-int targets[12] = {
+int ttargets[15] = {
     0,0,  8,
     5,5,100,
     1,1, -2,
-    7,7, -6
+    7,7, -6,
+    90,90,90
 };
 
-int bombs[20] = {
+int tbombs[20] = {
     2,1,2,3,
     1,1,1,4,
     7,7,0,3,
@@ -114,6 +115,11 @@ int main(int argc, char const *argv[])
     int world_size;
     int *res_arr;
     int res_total[6];
+    int map_size;
+    int n_targets;
+    int n_bombs;
+    int *targets;
+    int *bombs;
 
     
     // Inicializar
@@ -125,66 +131,69 @@ int main(int argc, char const *argv[])
     MPI_Type_contiguous(3,MPI_INT,&target_type);
     MPI_Type_commit(&target_type);
 
-    b_areas = calloc(NUM_BOMBS*5,sizeof(int));
 
     if (world_rank == 0)
     {
         // Read
+        /* Start reading data */
+        scanf("%d",&map_size);
+
+        /* Reading targets */
+        scanf("%d",&n_targets);
+        targets = (int *) malloc(sizeof(int) * n_targets * 3);
+        for (i = 0; i < n_targets; ++i)
+        {   
+            scanf("%d %d %d\n",&targets[i*3],&targets[i*3 + 1],&targets[i*3 + 2]);
+        }
+
+        /* Reading bombs */
+        scanf("%d",&n_bombs);
+        bombs = (int *) malloc(sizeof(int) * n_bombs * 4);
+        b_areas = (int *) malloc(sizeof(int) * n_bombs * 5);
+        for (i = 0; i < n_bombs; ++i)
+        {
+            scanf("%d %d %d %d\n",&bombs[i*4],&bombs[i*4 + 1],&bombs[i*4 + 2],&bombs[i*4 + 3]);
+        }
+
 
         // Bomb square areas to limit coordinates
-        for (i = 0; i < NUM_BOMBS; ++i)
+        for (i = 0; i < n_bombs; ++i)
             radToArea(&bombs[i*RAW_BOMB_SIZE],&b_areas[i*BOMB_SIZE]);
-
         // printing new bomb areas
+        /*
         for (i = 0; i < NUM_BOMBS; ++i)
             for (j = 0; j < 5; ++j) {
                 printf("%3d", b_areas[i*BOMB_SIZE + j]);
                 if (j == 4) printf("\n");
             }
 
-        printf("===========================\n");
+        printf("===========================\n");*/
     }
 
+    MPI_Bcast(&n_bombs, 1, MPI_INT,
+              0,MPI_COMM_WORLD);
+    MPI_Bcast(&n_targets, 1, MPI_INT,
+              0,MPI_COMM_WORLD);
 
-    int num_elements_per_proc = 1 ; // ntargets / world_size
+    if (world_rank != 0){
+        b_areas = (int *) malloc(sizeof(int) * n_bombs * 5);
+        targets = (int *) malloc(sizeof(int) * n_targets * 3);
+    }
+    int num_elements_per_proc = n_targets / world_size ; // ntargets / world_size
+    printf("%d\n", num_elements_per_proc);
 
 
-    //int parallel_targets[num_elements_per_proc][TARGET_SIZE];
     int *parallel_targets = (int *)malloc(num_elements_per_proc*sizeof(int *)*3);
-    /*int **parallel_targets = (int **)malloc(num_elements_per_proc*sizeof(int));
-    for (i = 0; i < num_elements_per_proc; ++i)
-    {
-        parallel_targets[i] = (int *) malloc(sizeof(int)*3);
-    }*/
-
-
-
-    /* n_elements_per_proc arrays of 3 ints*/
-    //int **parallel_targets = (int **) calloc(num_elements_per_proc,sizeof(int*));
-
-    /*for (i = 0; i < num_elements_per_proc; ++i)
-        parallel_targets[i] = (int *) calloc(TARGET_SIZE,sizeof(int));
-
-    printf("Aqui\n");
-    if (world_rank == 0){
-        for (i = 0; i < num_elements_per_proc; ++i)
-            printf("%p\n",parallel_targets[i]);
-    }*/
-
-
-    /* Number of bombs arrays of size 5 (after conversion) */
-    // int **bombs            = (int **) calloc(num_bombs,sizeof(int)* 5);
-    // HACER E BROADCAST
-
 
 
     MPI_Scatter(targets          ,  num_elements_per_proc  , target_type, 
                 parallel_targets ,  num_elements_per_proc  , target_type, 
                 0, MPI_COMM_WORLD);
 
-    MPI_Bcast(b_areas, BOMB_SIZE*5, MPI_INT,
-              0,MPI_COMM_WORLD);
 
+
+    MPI_Bcast(b_areas, BOMB_SIZE*n_bombs, MPI_INT,
+              0,MPI_COMM_WORLD);
 
 
     /* Process each target and accumulate */ 
@@ -217,17 +226,7 @@ int main(int argc, char const *argv[])
         printf("Civilian Targets not affected: %d\n", res_total[5]);
         printf("\n");
     }
-/*
-    for (i = 0; i < NUM_BOMBS; ++i)
-        free(b_areas[i]);
 
-#define DEAD_MIL    0
-#define BROKEN_MIL  1
-#define UNTOUCH_MIL 2
-#define DEAD_CIV    3
-#define BROKEN_CIV  4
-#define UNTOUCH_CIV 5
-*/
     MPI_Type_free(&target_type);
 
     MPI_Barrier(MPI_COMM_WORLD);
