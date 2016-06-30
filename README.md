@@ -1,3 +1,6 @@
+---
+header-includes: \usepackage{graphicx}
+---
 \newpage
 # Introducción
 
