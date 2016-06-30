@@ -151,11 +151,7 @@ int main(int argc, char const *argv[])
 
 
     //int parallel_targets[num_elements_per_proc][TARGET_SIZE];
-    int **parallel_targets = (int **)malloc(num_elements_per_proc*sizeof(int));
-    for (i = 0; i < num_elements_per_proc; ++i)
-    {
-        parallel_targets[i] = (int *) malloc(sizeof(int)*3);
-    }
+    int *parallel_targets = (int *)malloc(num_elements_per_proc*sizeof(int *)*3);
 
     for (i = 0; i < 6; ++i)
         res_aux[i] = 0;
@@ -165,14 +161,16 @@ int main(int argc, char const *argv[])
                 parallel_targets ,  num_elements_per_proc  , target_type, 
                 0, MPI_COMM_WORLD);
 
-    for (i = 0; i < num_elements_per_proc; ++i)
+    printf("adas %d\n", parallel_targets[0][2]);
+
+    /*for (i = 0; i < num_elements_per_proc; ++i)
     {
         for (j = 0; j < 3; ++j)
         {   printf("3213\n");
 
             printf("Process %d and lolol is %d\n", world_rank, parallel_targets[i][j]);
         }
-    }
+    }*/
 
 
 
