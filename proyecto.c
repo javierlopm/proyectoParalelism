@@ -61,14 +61,15 @@ int isInBombingArea(int area[],int target[]){
 	process función que dada una lista de targets y una lista de attacks
 	calcula los daños ocasionados por el bombardeo en dicha lista de objetivos
 */
-int * process(int **targets, int **attacks)
+int * process(int **targets, int **attacks, int num_elements_per_proc)
 {
+
 
     int i, j,touched = 1,isCivil,alive;
     static int res[6];
 
 
-    for (i = 0; i < NUM_TARGETS; ++i) {
+    for (i = 0; i < num_elements_per_proc; ++i) {
         touched = 0;
         isCivil = targets[i][2] > 0;
         alive   = 1;
@@ -114,7 +115,6 @@ int main(int argc, char const *argv[])
     int *res_arr;
     int res_aux[6];
 
-
     
     // Inicializar
     MPI_Init(NULL, NULL);
@@ -122,8 +122,11 @@ int main(int argc, char const *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     MPI_Datatype target_type;
-    MPI_Type_contiguous(TARGET_SIZE,MPI_INT,&target_type);
+    MPI_Type_contiguous(3,MPI_INT,&target_type);
     MPI_Type_commit(&target_type);
+
+    printf("size of target type %zu\n", sizeof(target_type));
+    printf("size of target int  %zu\n", sizeof(int));
 
     if (world_rank == 0)
     {
@@ -146,36 +149,49 @@ int main(int argc, char const *argv[])
 
     int num_elements_per_proc = 1 ; // ntargets / world_size
 
-    int ** parallel_targets = (int **) malloc(sizeof(int) 
-                                              * num_elements_per_proc 
-                                              * TARGET_SIZE);
+
+    //int parallel_targets[num_elements_per_proc][TARGET_SIZE];
+    int **parallel_targets = (int **)malloc(num_elements_per_proc*sizeof(int));
+    for (i = 0; i < num_elements_per_proc; ++i)
+    {
+        parallel_targets[i] = (int *) malloc(sizeof(int)*3);
+    }
 
     for (i = 0; i < 6; ++i)
         res_aux[i] = 0;
+
 
     MPI_Scatter(targets          ,  num_elements_per_proc  , target_type, 
                 parallel_targets ,  num_elements_per_proc  , target_type, 
                 0, MPI_COMM_WORLD);
 
-
-
-    /* Process each target and accumulate */
     for (i = 0; i < num_elements_per_proc; ++i)
     {
-        res = process(parallel_targets,b_areas);
-        for (j = 0; i < 6; ++j)
-            res_aux[i] += res[i];
+        for (j = 0; j < 3; ++j)
+        {   printf("3213\n");
+
+            printf("Process %d and lolol is %d\n", world_rank, parallel_targets[i][j]);
+        }
     }
+
+
+
+    /* Process each target and accumulate 
+    res = process(parallel_targets,b_areas,num_elements_per_proc);
+    for (j = 0; i < 6; ++j)
+        res_aux[i] += res[i];
     free(res);
-
-
+*/
+/*
     if (world_rank == 0) {
         res_arr = (int *) malloc(sizeof(int) * 4 * world_size );
     }
 
+
     MPI_Gather( res_aux, 6, MPI_INT, 
                 res_arr, 6, MPI_INT, 
                 0, MPI_COMM_WORLD);
+
 
     if (world_rank == 0) 
         for (i = 0; i < 6 * num_elements_per_proc; ++i)
@@ -183,7 +199,7 @@ int main(int argc, char const *argv[])
 
     for (i = 0; i < NUM_BOMBS; ++i)
         free(b_areas[i]);
-
+*/
     MPI_Type_free(&target_type);
 
     MPI_Barrier(MPI_COMM_WORLD);
