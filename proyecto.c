@@ -50,37 +50,40 @@ void radToArea(int bomb[],int res[]){
 	isInBombingArea dado un target y un área bombardeada
 	verifica que el target haya sido afectado por la bomba
 */
-int isInBombingArea(int area[],int target[]){
-    return (area[0] <= target[0]  && target[0] <= area[2]) && 
-           (area[1] <= target[1]  && target[1] <= area[3]);
+int isInBombingArea(int *area,int x_pos, int y_pos){
+    return (area[0] <= x_pos  && x_pos <= area[2]) && 
+           (area[1] <= y_pos  && y_pos <= area[3]);
 }
 
 /*
 	process función que dada una lista de targets y una lista de attacks
 	calcula los daños ocasionados por el bombardeo en dicha lista de objetivos
 */
-int * process(int **targets, int **attacks, int num_elements_per_proc)
+int * process(int *targets, int *attacks, int num_elements_per_proc)
 {
 
 
     int i, j,touched = 1,isCivil,alive;
     static int res[6];
+    int *act_bomb;
+
 
     for (i = 0; i < num_elements_per_proc; ++i) {
         touched = 0;
-        isCivil = targets[i][2] > 0;
+        isCivil = targets[3*i+2] > 0;
         alive   = 1;
 
-        for (j = 0; j < NUM_BOMBS; ++j) {
-            if (isInBombingArea(attacks[j],targets[i])) {
+        for (j = 0; j < NUM_BOMBS; j++) {
+            act_bomb = attacks + j*BOMB_SIZE;
+            if (isInBombingArea(act_bomb,targets[3*i],targets[3*i+1])) {
                 touched = 1;
                 if (isCivil) {
-                    targets[i][2] -= attacks[j][4];
-                    alive = targets[i][2] > 0;
+                    targets[3*i+2] -= act_bomb[4];
+                    alive = targets[3*i+2] > 0;
                 }
                 else {
-                    targets[i][2] += attacks[j][4];
-                    alive = targets[i][2] < 0;
+                    targets[3*i+2] += act_bomb[4];
+                    alive = targets[3*i+2] < 0;
                 }
             }
 
@@ -110,7 +113,7 @@ int main(int argc, char const *argv[])
     int world_rank;
     int world_size;
     int *res_arr;
-    int res_aux[6];
+    int res_total[6];
 
     
     // Inicializar
@@ -121,9 +124,6 @@ int main(int argc, char const *argv[])
     MPI_Datatype target_type;
     MPI_Type_contiguous(3,MPI_INT,&target_type);
     MPI_Type_commit(&target_type);
-
-    printf("size of target type %zu\n", sizeof(target_type));
-    printf("size of target int  %zu\n", sizeof(int));
 
     b_areas = calloc(NUM_BOMBS*5,sizeof(int));
 
@@ -160,66 +160,73 @@ int main(int argc, char const *argv[])
 
 
     /* n_elements_per_proc arrays of 3 ints*/
-    int **parallel_targets = (int **) calloc(num_elements_per_proc,sizeof(int*));
+    //int **parallel_targets = (int **) calloc(num_elements_per_proc,sizeof(int*));
 
-    for (i = 0; i < num_elements_per_proc; ++i)
+    /*for (i = 0; i < num_elements_per_proc; ++i)
         parallel_targets[i] = (int *) calloc(TARGET_SIZE,sizeof(int));
 
     printf("Aqui\n");
     if (world_rank == 0){
         for (i = 0; i < num_elements_per_proc; ++i)
             printf("%p\n",parallel_targets[i]);
-    }
+    }*/
 
 
     /* Number of bombs arrays of size 5 (after conversion) */
     // int **bombs            = (int **) calloc(num_bombs,sizeof(int)* 5);
     // HACER E BROADCAST
 
-    for (i = 0; i < 6; ++i)
-        res_aux[i] = 0;
 
 
     MPI_Scatter(targets          ,  num_elements_per_proc  , target_type, 
                 parallel_targets ,  num_elements_per_proc  , target_type, 
                 0, MPI_COMM_WORLD);
 
-    printf("adas %d\n", parallel_targets[0][2]);
-
-    /*for (i = 0; i < num_elements_per_proc; ++i)
-    {
-        for (j = 0; j < 3; ++j)
-        {   printf("3213\n");
-
-            printf("Process %d and lolol is %d\n", world_rank, parallel_targets[i][j]);
-        }
-    }*/
+    MPI_Bcast(b_areas, BOMB_SIZE*5, MPI_INT,
+              0,MPI_COMM_WORLD);
 
 
 
-    /* Process each target and accumulate 
+    /* Process each target and accumulate */ 
     res = process(parallel_targets,b_areas,num_elements_per_proc);
-    for (j = 0; i < 6; ++j)
-        res_aux[i] += res[i];
-    free(res);
-*/
-/*
+
     if (world_rank == 0) {
-        res_arr = (int *) malloc(sizeof(int) * 4 * world_size );
+        res_arr = (int *) malloc(sizeof(int) * 6 * world_size );
     }
 
-
-    MPI_Gather( res_aux, 6, MPI_INT, 
+    MPI_Gather( res    , 6, MPI_INT, 
                 res_arr, 6, MPI_INT, 
                 0, MPI_COMM_WORLD);
 
+    if (world_rank == 0) {
 
-    if (world_rank == 0) 
-        for (i = 0; i < 6 * num_elements_per_proc; ++i)
-            printf("%d \n",res_aux[i]);
+        for (i = 0; i < 6; ++i) res_total[i] = 0;
 
+        for (i = 0; i < world_size; ++i){
+            for (j = 0; j < 6; ++j)
+            {
+               res_total[j] = res_total[j] + res_arr[6*i + j];
+            }
+        }
+        printf("\n");
+        printf("Military Targets totally destroyed: %d\n", res_total[0]);
+        printf("Military Targets partially destroyed: %d\n", res_total[1]);
+        printf("Military Targets not affected: %d\n", res_total[2]);
+        printf("Civilian Targets totally destroyed: %d\n", res_total[3]);
+        printf("Civilian Targets partially destroyed: %d\n", res_total[4]);
+        printf("Civilian Targets not affected: %d\n", res_total[5]);
+        printf("\n");
+    }
+/*
     for (i = 0; i < NUM_BOMBS; ++i)
         free(b_areas[i]);
+
+#define DEAD_MIL    0
+#define BROKEN_MIL  1
+#define UNTOUCH_MIL 2
+#define DEAD_CIV    3
+#define BROKEN_CIV  4
+#define UNTOUCH_CIV 5
 */
     MPI_Type_free(&target_type);
 
