@@ -2,6 +2,15 @@
 header-includes: \usepackage{graphicx}
 ---
 \newpage
+
+Esta es una tabla
+
+| Tam de entrada     |Tiempo (uSec)| Aceleración |
+|--------------------|-------------|-------------|
+|50000               | 10001072    | culito^2    |
+|4534543             | 10001301    | culito^3    |
+
+
 # Introducción
 
 Para este proyecto seleccionamos uno de los 3 problemas del *Super Computing and Distributed Systems Camp Programming Contest* del año 2012, en este campamentos se suele evaluar el desempeño de los programas paralelos de los concursantes mediante la fórmula de aceleración que presentado en clases $(A=\dfrac{Tiempo Secuencial}{Tiempo Paralelo})$ es por esto que como primer paso implementamos un programa secuencial que resolviera el problema planteado.
