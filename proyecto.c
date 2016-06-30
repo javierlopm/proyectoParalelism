@@ -150,6 +150,7 @@ int main(int argc, char const *argv[])
 
 
     //int parallel_targets[num_elements_per_proc][TARGET_SIZE];
+    int *parallel_targets = (int *)malloc(num_elements_per_proc*sizeof(int *)*3);
     /*int **parallel_targets = (int **)malloc(num_elements_per_proc*sizeof(int));
     for (i = 0; i < num_elements_per_proc; ++i)
     {
@@ -158,17 +159,18 @@ int main(int argc, char const *argv[])
 
 
 
-    /* n_elements_per_proc arrays of 4 ints*/
+    /* n_elements_per_proc arrays of 3 ints*/
     int **parallel_targets = (int **) calloc(num_elements_per_proc,sizeof(int*));
 
     for (i = 0; i < num_elements_per_proc; ++i)
-        parallel_targets[i] = (int *) calloc(3,sizeof(int));
+        parallel_targets[i] = (int *) calloc(TARGET_SIZE,sizeof(int));
 
     printf("Aqui\n");
     if (world_rank == 0){
         for (i = 0; i < num_elements_per_proc; ++i)
             printf("%p\n",parallel_targets[i]);
     }
+
 
     /* Number of bombs arrays of size 5 (after conversion) */
     // int **bombs            = (int **) calloc(num_bombs,sizeof(int)* 5);
@@ -182,14 +184,16 @@ int main(int argc, char const *argv[])
                 parallel_targets ,  num_elements_per_proc  , target_type, 
                 0, MPI_COMM_WORLD);
 
-    for (i = 0; i < num_elements_per_proc; ++i)
+    printf("adas %d\n", parallel_targets[0][2]);
+
+    /*for (i = 0; i < num_elements_per_proc; ++i)
     {
         for (j = 0; j < 3; ++j)
         {   printf("3213\n");
 
             printf("Process %d and lolol is %d\n", world_rank, parallel_targets[i][j]);
         }
-    }
+    }*/
 
 
 
