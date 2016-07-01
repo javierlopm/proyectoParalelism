@@ -3,13 +3,6 @@ header-includes: \usepackage{graphicx}
 ---
 \newpage
 
-Esta es una tabla
-
-| Tam de entrada     |Tiempo (uSec)| Aceleración |
-|--------------------|-------------|-------------|
-|50000               | 10001072    | culito^2    |
-|4534543             | 10001301    | culito^3    |
-
 
 # Introducción
 
@@ -62,6 +55,41 @@ Cada proceso realizará el cálculo de objetivos destruidos, parcialmente destru
 ### Totalización del cálculo
 
 Luego de que cada nodo terminó de realizar su procesamiento, mediante el uso del procedimiento MPI_Gather, se acumularán todos los vectores resultantes en el nodo maestro, el cual procederá a reducir todas las respuestas a un solo arreglo de tamaño 6 (3 para civiles, y 3 para militares) mediante la sumatoria de las posiciones afines.
+
+### Tablas de análisis
+
+#### Secuencial
+| Tamaño de entrada                  |Tiempo    (uSec)|
+|------------------------------------|----------------|
+|20000 objetivos, 1000 bombas        | 0:59563        |
+|400000 objetivos, 2000 bombas       | 2:347187       |
+|800000 objetivos, 8000 bombas       | 18:708761      |
+|1000000 objetivos, 10000 bombas     | 29:216888      |
+
+#### 2 procesos
+| Tamaño de entrada (nro de targets)    |Tiempo secuencial (uSec)|Tiempo paralelo (uSec)| Aceleración |
+|---------------------------------------|------------------------|----------------------|-------------|
+|20000 objetivos, 1000 bombas           | 0:59563                | 0:30935              | 1.9254      |
+|400000 objetivos, 2000 bombas          | 2:347187               | 1:179404             | 1.9901      |
+|800000 objetivos, 8000 bombas          | 18:708761              | 9:369040             | 1.9968      |
+|1000000 objetivos, 10000 bombas        | 29:216888              | 14:626805            | 1.9974      |
+
+#### 4 procesos
+| Tamaño de entrada (nro de targets)    |Tiempo secuencial (uSec)|Tiempo paralelo (uSec)| Aceleración |
+|---------------------------------------|------------------------|----------------------|-------------|
+|20000 objetivos, 1000 bombas           | 0:59563                | 0:17390              | 3.4251      |
+|400000 objetivos, 2000 bombas          | 2:347187               | 0:614890             | 3.8172      |
+|800000 objetivos, 8000 bombas          | 18:708761              | 4:736750             | 3.9497      |
+|1000000 objetivos, 10000 bombas        | 29:216888              | 7:378487             | 3.9597      |
+
+#### 8 procesos
+| Tamaño de entrada (nro de targets)    |Tiempo secuencial (uSec)|Tiempo paralelo (uSec)| Aceleración |
+|---------------------------------------|------------------------|----------------------|-------------|
+|20000 objetivos, 1000 bombas           | 0:59563                | 0:12257              | 4.8595      |
+|400000 objetivos, 2000 bombas          | 2:347187               | 0:334091             | 7.0255      |
+|800000 objetivos, 8000 bombas          | 18:708761              | 2:418354             | 7.7361      |
+|1000000 objetivos, 10000 bombas        | 29:216888              | 3:751257             | 7.7885      |
+
 
 # Análisis de otros problemas
 
