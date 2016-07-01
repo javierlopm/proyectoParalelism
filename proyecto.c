@@ -18,32 +18,15 @@
 #define RAW_BOMB_SIZE 4
 #define BOMB_SIZE     5
 
-//  Basic test case
-int ttargets[15] = {
-    0,0,  8,
-    5,5,100,
-    1,1, -2,
-    7,7, -6,
-    90,90,90
-};
-
-int tbombs[20] = {
-    2,1,2,3,
-    1,1,1,4,
-    7,7,0,3,
-    6,6,4,8,
-    9,9,8,1
-};
-
 /* 
 	radToArea transforma el formato de los bombardeos a 
 	otro más eficiente de manejar
 */
 void radToArea(int bomb[],int res[]){
     res[0] = bomb[0]-bomb[2];
-    res[1] = bomb[2]-bomb[2];
+    res[1] = bomb[1]-bomb[2];
     res[2] = bomb[0]+bomb[2];
-    res[3] = bomb[2]+bomb[2];
+    res[3] = bomb[1]+bomb[2];
     res[4] = bomb[3];
 }
 
@@ -60,7 +43,7 @@ int isInBombingArea(int *area,int x_pos, int y_pos){
 	process función que dada una lista de targets y una lista de attacks
 	calcula los daños ocasionados por el bombardeo en dicha lista de objetivos
 */
-int * process(int *targets, int *attacks, int num_elements_per_proc)
+int * process(int *targets, int *attacks, int num_elements_per_proc, int n_bombs)
 {
 
     int i, j,touched = 1,isCivil,alive;
@@ -73,7 +56,9 @@ int * process(int *targets, int *attacks, int num_elements_per_proc)
         isCivil = targets[3*i+2] > 0;
         alive   = 1;
 
-        for (j = 0; j < NUM_BOMBS; j++) {
+
+
+        for (j = 0; j < n_bombs; j++) {
             act_bomb = attacks + j*BOMB_SIZE;
             if (isInBombingArea(act_bomb,targets[3*i],targets[3*i+1])) {
                 touched = 1;
@@ -133,22 +118,25 @@ int main(int argc, char const *argv[])
     if (world_rank == 0)
     {
         // Read
+        FILE *fp;
+
+        fp = fopen(argv[1],"r");
         /* Start reading data */
-        scanf("%d",&map_size);
+        fscanf(fp,"%d",&map_size);
 
         /* Reading targets */
-        scanf("%d",&n_targets);
+        fscanf(fp,"%d",&n_targets);
         targets = (int *) malloc(sizeof(int) * n_targets * 3);
         for (i = 0; i < n_targets; ++i)  
-            scanf("%d %d %d\n",&targets[i*3],&targets[i*3 + 1],&targets[i*3 + 2]);
+            fscanf(fp,"%d %d %d\n",&targets[i*3],&targets[i*3 + 1],&targets[i*3 + 2]);
         
 
         /* Reading bombs */
-        scanf("%d",&n_bombs);
+        fscanf(fp,"%d",&n_bombs);
         bombs   = (int *) malloc(sizeof(int) * n_bombs * 4);
         b_areas = (int *) malloc(sizeof(int) * n_bombs * 5);
         for (i = 0; i < n_bombs; ++i)
-            scanf("%d %d %d %d\n"
+            fscanf(fp,"%d %d %d %d\n"
                  ,&bombs[i*4]
                  ,&bombs[i*4 + 1]
                  ,&bombs[i*4 + 2]
@@ -159,16 +147,11 @@ int main(int argc, char const *argv[])
         // Bomb square areas to limit coordinates
         for (i = 0; i < n_bombs; ++i)
             radToArea(&bombs[i*RAW_BOMB_SIZE],&b_areas[i*BOMB_SIZE]);
-        // printing new bomb areas
-        /*
-        for (i = 0; i < NUM_BOMBS; ++i)
-            for (j = 0; j < 5; ++j) {
-                printf("%3d", b_areas[i*BOMB_SIZE + j]);
-                if (j == 4) printf("\n");
-            }
-
-        printf("===========================\n");*/
     }
+
+    struct timeval t0,tf,t;
+
+    gettimeofday(&t0,NULL);
 
     MPI_Bcast(&n_bombs, 1, MPI_INT,
               0,MPI_COMM_WORLD);
@@ -180,8 +163,6 @@ int main(int argc, char const *argv[])
         targets = (int *) malloc(sizeof(int) * n_targets * 3);
     }
     int num_elements_per_proc = n_targets / world_size ; // ntargets / world_size
-
-    printf("%d\n", num_elements_per_proc);
 
 
     int *parallel_targets = (int *)malloc(num_elements_per_proc*sizeof(int)*3);
@@ -200,8 +181,7 @@ int main(int argc, char const *argv[])
     int missing_targets = n_targets % world_size;
 
     /* Process each target and accumulate */ 
-    // printf("Procesando %d desde %d\n",num_elements_per_proc,world_rank);
-    res = process(parallel_targets,b_areas,num_elements_per_proc);
+    res = process(parallel_targets,b_areas,num_elements_per_proc, n_bombs);
 
     if (world_rank == 0)
         res_arr = (int *) malloc(sizeof(int) * 6 * (world_size + missing_targets));
@@ -212,6 +192,7 @@ int main(int argc, char const *argv[])
                 res_arr, 6, MPI_INT, 
                 0, MPI_COMM_WORLD);
 
+
     if (world_rank == 0) {
         /* Process missing targets in master */
         if (missing_targets > 0){
@@ -221,14 +202,13 @@ int main(int argc, char const *argv[])
                 printf("%d ",targets[i]);
             printf("\n");
 
-            printf("First missing %d and missing %d \n",first_missing,missing_targets);
 
             int * missing_elems = process(&targets[first_missing]
                                          ,bombs
-                                         ,missing_targets);
+                                         ,missing_targets
+                                         ,n_bombs);
             int i;
             /* Now we assign extra elements to results */
-            printf("Asignando excedentes\n");
             for (i = 0; i < 6; ++i){
                 printf("%d ",missing_elems[i]);
                 res_arr[world_size*6 + i] = missing_elems[i];
@@ -243,12 +223,12 @@ int main(int argc, char const *argv[])
 
         /*Imprimiendo resultados*/
 
-        for (i = 0; i < world_size + (missing_targets > 0); ++i){
+        /*for (i = 0; i < world_size + (missing_targets > 0); ++i){
             for (j = 0; j < 6; ++j){
                 printf("%d ",res_arr[ i * 6 + j]);
             }
             printf("\n");
-        }
+        }*/
 
         /* Iterate through stored results and maybe missing elements*/
         for (i = 0; i < world_size + (missing_targets > 0) ; ++i)
@@ -266,6 +246,10 @@ int main(int argc, char const *argv[])
         printf("Civilian Targets not affected: %d\n", res_total[5]);
         printf("\n");
     }
+
+    gettimeofday(&tf,NULL);
+    timersub(&tf,&t0,&t);
+    printf("tiempo %ld:%ld \n",t.tv_sec,t.tv_usec);
 
     MPI_Type_free(&target_type);
 
