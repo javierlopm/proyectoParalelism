@@ -63,7 +63,6 @@ int isInBombingArea(int *area,int x_pos, int y_pos){
 int * process(int *targets, int *attacks, int num_elements_per_proc)
 {
 
-
     int i, j,touched = 1,isCivil,alive;
     static int res[6];
     int *act_bomb;
@@ -120,7 +119,6 @@ int main(int argc, char const *argv[])
     int n_bombs;
     int *targets;
     int *bombs;
-
     
     // Inicializar
     MPI_Init(NULL, NULL);
@@ -141,19 +139,21 @@ int main(int argc, char const *argv[])
         /* Reading targets */
         scanf("%d",&n_targets);
         targets = (int *) malloc(sizeof(int) * n_targets * 3);
-        for (i = 0; i < n_targets; ++i)
-        {   
+        for (i = 0; i < n_targets; ++i)  
             scanf("%d %d %d\n",&targets[i*3],&targets[i*3 + 1],&targets[i*3 + 2]);
-        }
+        
 
         /* Reading bombs */
         scanf("%d",&n_bombs);
-        bombs = (int *) malloc(sizeof(int) * n_bombs * 4);
+        bombs   = (int *) malloc(sizeof(int) * n_bombs * 4);
         b_areas = (int *) malloc(sizeof(int) * n_bombs * 5);
         for (i = 0; i < n_bombs; ++i)
-        {
-            scanf("%d %d %d %d\n",&bombs[i*4],&bombs[i*4 + 1],&bombs[i*4 + 2],&bombs[i*4 + 3]);
-        }
+            scanf("%d %d %d %d\n"
+                 ,&bombs[i*4]
+                 ,&bombs[i*4 + 1]
+                 ,&bombs[i*4 + 2]
+                 ,&bombs[i*4 + 3]);
+        
 
 
         // Bomb square areas to limit coordinates
@@ -176,14 +176,15 @@ int main(int argc, char const *argv[])
               0,MPI_COMM_WORLD);
 
     if (world_rank != 0){
-        b_areas = (int *) malloc(sizeof(int) * n_bombs * 5);
+        b_areas = (int *) malloc(sizeof(int) * n_bombs   * 5);
         targets = (int *) malloc(sizeof(int) * n_targets * 3);
     }
     int num_elements_per_proc = n_targets / world_size ; // ntargets / world_size
+
     printf("%d\n", num_elements_per_proc);
 
 
-    int *parallel_targets = (int *)malloc(num_elements_per_proc*sizeof(int *)*3);
+    int *parallel_targets = (int *)malloc(num_elements_per_proc*sizeof(int)*3);
 
 
     MPI_Scatter(targets          ,  num_elements_per_proc  , target_type, 
@@ -196,27 +197,66 @@ int main(int argc, char const *argv[])
               0,MPI_COMM_WORLD);
 
 
+    int missing_targets = n_targets % world_size;
+
     /* Process each target and accumulate */ 
+    // printf("Procesando %d desde %d\n",num_elements_per_proc,world_rank);
     res = process(parallel_targets,b_areas,num_elements_per_proc);
 
-    if (world_rank == 0) {
-        res_arr = (int *) malloc(sizeof(int) * 6 * world_size );
-    }
+    if (world_rank == 0)
+        res_arr = (int *) malloc(sizeof(int) * 6 * (world_size + missing_targets));
+
+    
 
     MPI_Gather( res    , 6, MPI_INT, 
                 res_arr, 6, MPI_INT, 
                 0, MPI_COMM_WORLD);
 
     if (world_rank == 0) {
+        /* Process missing targets in master */
+        if (missing_targets > 0){
+            int first_missing   = (n_targets - missing_targets) * 3;
+
+            for ( i = first_missing; i < first_missing + 3; ++i)
+                printf("%d ",targets[i]);
+            printf("\n");
+
+            printf("First missing %d and missing %d \n",first_missing,missing_targets);
+
+            int * missing_elems = process(&targets[first_missing]
+                                         ,bombs
+                                         ,missing_targets);
+            int i;
+            /* Now we assign extra elements to results */
+            printf("Asignando excedentes\n");
+            for (i = 0; i < 6; ++i){
+                printf("%d ",missing_elems[i]);
+                res_arr[world_size*6 + i] = missing_elems[i];
+            }
+            printf("\n");
+
+        } 
 
         for (i = 0; i < 6; ++i) res_total[i] = 0;
 
-        for (i = 0; i < world_size; ++i){
-            for (j = 0; j < 6; ++j)
-            {
-               res_total[j] = res_total[j] + res_arr[6*i + j];
+        printf("%d\n",world_size + (missing_targets > 0));
+
+        /*Imprimiendo resultados*/
+
+        for (i = 0; i < world_size + (missing_targets > 0); ++i){
+            for (j = 0; j < 6; ++j){
+                printf("%d ",res_arr[ i * 6 + j]);
             }
+            printf("\n");
         }
+
+        /* Iterate through stored results and maybe missing elements*/
+        for (i = 0; i < world_size + (missing_targets > 0) ; ++i)
+            for (j = 0; j < 6; ++j)
+               res_total[j] = res_total[j] + res_arr[6*i + j];
+            
+        
+
         printf("\n");
         printf("Military Targets totally destroyed: %d\n", res_total[0]);
         printf("Military Targets partially destroyed: %d\n", res_total[1]);
